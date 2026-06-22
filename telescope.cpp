@@ -1,205 +1,358 @@
-#include <allegro5/allegro.h>
-#include <allegro5/allegro_primitives.h>
+#include <iostream>
 #include <stdio.h>
-#include <stdbool.h>
-#define ANCHO_PANTALLA 1024
-#define ALTO_PANTALLA 768
-#define TAMAÑO_CUADRADO 32
-#define VELOCIDAD 5
-#define MAX_BLOQUES 100
+#include <stdlib.h>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_native_dialog.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>}
+#include <allegro5/allegro_primitives.h>
+#include <string>
+#include <Windows.h>
 
-typedef struct { int x; int y; int ancho; int alto; } Bloque;
+#define AN_P 1000
+#define AL_P 800
+
+using namespace std;
+
 typedef struct { int x; int y; int ancho; int alto; int vel_x; int vel_y; } Jugador;
-// Función para verificar colisión entre dos rectángulos
-bool verificar_colision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2) 
-{
-	return !(x1 + w1 <= x2 || x1 >= x2 + w2 || y1 + h1 <= y2 || y1 >= y2 + h2);
-}
-// Función para colocar un bloque en el mapa
-void colocar_bloque(Bloque bloques[], int *num_bloques, int x, int y) 
-{  
-	if (*num_bloques < MAX_BLOQUES) { 
-		bloques[*num_bloques].x = x;
-		bloques[*num_bloques].y = y; 
-		bloques[*num_bloques].ancho = TAMAÑO_CUADRADO;
-		bloques[*num_bloques].alto = TAMAÑO_CUADRADO; 
-		(*num_bloques)++;
-	}
-}
-// Función para dibujar todos los bloques
-void dibujar_bloques(Bloque bloques[], int num_bloques) 
-{
-	for (int i = 0; i < num_bloques; i++) 
-	{  
-		al_draw_filled_rectangle(bloques[i].x, bloques[i].y, bloques[i].x + bloques[i].ancho, bloques[i].y + bloques[i].alto, al_map_rgb(100, 100, 100)); 
-	}
-}
-// Función para actualizar la posición del jugador con colisiones
-void actualizar_jugador(Jugador *jugador, Bloque bloques[], int num_bloques) 
-{
-	int nueva_x = jugador->x + jugador->vel_x; 
-	int nueva_y = jugador->y + jugador->vel_y; 
-// Verificar colisiones con bloques     
-bool colision = false;
-for (int i = 0; i < num_bloques; i++) 
-{ 
-	if (verificar_colision(nueva_x, nueva_y, jugador->ancho, jugador->alto, bloques[i].x, bloques[i].y, bloques[i].ancho, bloques[i].alto)) 
-	{
-		colision = true; 
-		break;  
-	}
-} 
-	// Verificar límites de pantalla     
-if (nueva_x < 0 || nueva_x + jugador->ancho > ANCHO_PANTALLA) 
-{
-	colision = true; 
-} 
-if (nueva_y < 0 || nueva_y + jugador->alto > ALTO_PANTALLA)
-{ 
-	colision = true;
-}
-	// Actualizar posición si no hay colisión     
-if (!colision) 
-{
-	jugador->x = nueva_x; 
-	jugador->y = nueva_y;
-} 
-	// Resetear velocidad     
-jugador->vel_x = 0; jugador->vel_y = 0;
 
-}
-int main(void) 
-{
-	
-	
-	// Inicializar Allegro     
-		if (!al_init()) 
-		{
-			fprintf(stderr, "Error al inicializar Allegro\n"); 
-			return -1;
-		} 
-		
-		// Inicializar add-ons     
-		al_init_primitives_addon();
-		al_install_keyboard(); 
-		
-		// Crear ventana ALLEGRO_DISPLAY     
-		*display = al_create_display(ANCHO_PANTALLA, ALTO_PANTALLA);
-		if (!display)
-		{
-			fprintf(stderr, "Error al crear la pantalla\n");
-			return -1;
-		}
-		
-		al_set_window_title(display, "Cuadrado con Colisiones - Allegro");
-		// Crear event queue ALLEGRO_EVENT_QUEUE     
-		*queue = al_create_event_queue();
-		al_register_event_source(queue, al_get_display_event_source(display));
-		al_register_event_source(queue, al_get_keyboard_event_source());  
-		
-		// Crear timer ALLEGRO_TIMER     
-		*timer = al_create_timer(1.0 / 60.0);
-		al_register_event_source(queue, al_get_timer_event_source(timer));
-		al_start_timer(timer);
-		
-		// Inicializar jugador     
-		
-		Jugador jugador;
-		jugador.x = ANCHO_PANTALLA / 2 - TAMAÑO_CUADRADO / 2;
-		jugador.y = ALTO_PANTALLA / 2 - TAMAÑO_CUADRADO / 2;
-		jugador.ancho = TAMAÑO_CUADRADO; 
-		jugador.alto = TAMAÑO_CUADRADO;
-		jugador.vel_x = 0;
-		jugador.vel_y = 0;
-		
-		// Inicializar bloques 
-		Bloque bloques[MAX_BLOQUES]; 
-		int num_bloques = 0;
-		
-		// Crear algunos bloques iniciales     
-		// 
-		colocar_bloque(bloques, &num_bloques, 100, 100); 
-		colocar_bloque(bloques, &num_bloques, 200, 200); 
-		colocar_bloque(bloques, &num_bloques, 300, 150);
-		bool ejecutando = true;
-		bool redraw = false; 
-		ALLEGRO_KEYBOARD_STATE estado_teclado; 
-		while (ejecutando)  
-		{  
-			ALLEGRO_EVENT evento; 
-			while (al_get_next_event(queue, &evento)) 
-			{ 
-				switch (evento.type) 
-				{  
-					case ALLEGRO_EVENT_DISPLAY_CLOSE: ejecutando = false;
-					break; 
-					case ALLEGRO_EVENT_KEY_DOWN: if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
-					{
-						ejecutando = false;  
-					}
-					break; 
-					case ALLEGRO_EVENT_TIMER: redraw = true;
-					break; 
-				}
-			} 
-				
-		// Obtener estado del teclado para movimiento continuo         
-		al_get_keyboard_state(&estado_teclado); 
-		if (al_key_down(&estado_teclado, ALLEGRO_KEY_UP)) 
-		{ 
-			jugador.vel_y = -VELOCIDAD; 
-		}
-		if (al_key_down(&estado_teclado, ALLEGRO_KEY_DOWN)) 
-		{ 
-			jugador.vel_y = VELOCIDAD; 
-		}
-		if (al_key_down(&estado_teclado, ALLEGRO_KEY_LEFT)) 
-		{ 
-		jugador.vel_x = -VELOCIDAD; 
-		}
-		if (al_key_down(&estado_teclado, ALLEGRO_KEY_RIGHT)) 
-		{ 
-			jugador.vel_x = VELOCIDAD; 
-		}
-		// Colocar bloques con clic del mouse (simulado con ESPACIO)         
-		if (al_key_down(&estado_teclado, ALLEGRO_KEY_SPACE)) 
-		{
-			
-			// Obtener posición del mouse para una versión más avanzada             
-		// // Por ahora, usamos una posición fija             
-			static bool espacio_presionado = false; 
-			if (!espacio_presionado)
-			{
-				ALLEGRO_MOUSE_STATE mouse_state; 
-				al_get_mouse_state(&mouse_state);
-				int bloque_x = (mouse_state.x / TAMAÑO_CUADRADO) * TAMAÑO_CUADRADO;
-				int bloque_y = (mouse_state.y / TAMAÑO_CUADRADO) * TAMAÑO_CUADRADO;
-				colocar_bloque(bloques, &num_bloques, bloque_x, bloque_y); 
-				espacio_presionado = true;
+// Tipos y estado para pantallas secundarias
+enum ShapeType { SHAPE_TRIANGLE, SHAPE_CIRCLE, SHAPE_RECTANGLE };
+
+typedef struct {
+	ShapeType shape;
+	ALLEGRO_COLOR bgColor;
+	ALLEGRO_COLOR shapeColor;
+	int size;
+	int pos_x;
+	int pos_y;
+	bool filled;
+} WindowState;
+
+// Función que abre la pantalla de dibujo/modal y se queda en su propio bucle
+void fondo1(WindowState& ws, ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente) {
+	bool running = true;
+	ALLEGRO_EVENT ev;
+
+	// Redibuja en respuesta a eventos hasta que se salga (ESC o clic derecho)
+	while (running) {
+		al_wait_for_event(queue, &ev);
+
+		if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+			if (ev.mouse.button & 1) {
+				// click izquierdo: cambiar forma (ejemplo)
+				if (ws.shape == SHAPE_TRIANGLE) ws.shape = SHAPE_CIRCLE;
+				else if (ws.shape == SHAPE_CIRCLE) ws.shape = SHAPE_RECTANGLE;
+				else ws.shape = SHAPE_TRIANGLE;
 			}
-		}  
+
+			if (ev.mouse.button & 2) {
+				// click derecho: salir de la pantalla
+				running = false;
+			}
+		}
+
+		if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+			if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+				running = false;
+			}
+			// ejemplo: teclas para cambiar color/llenado
+			if (ev.keyboard.keycode == ALLEGRO_KEY_F) ws.filled = !ws.filled;
+		}
+
+		// Siempre dibujamos después de procesar eventos (simple, sin timers adicionales)
+		al_clear_to_color(ws.bgColor);
+
+		// Dibujar un indicador de "salir" en la esquina
+		ALLEGRO_COLOR backButton = al_map_rgb(80, 80, 80);
+		al_draw_filled_rectangle(10, 10, 110, 40, backButton);
+		al_draw_text(fuente, al_map_rgb(255, 255, 255), 20, 15, 0, "Salir (click derecho / ESC)");
+
+		// Dibujar la forma seleccionada
+		ALLEGRO_COLOR sCol = ws.shapeColor;
+		int cx = ws.pos_x;
+		int cy = ws.pos_y;
+		int s = ws.size;
+
+		if (ws.shape == SHAPE_TRIANGLE) {
+			if (ws.filled)
+				al_draw_filled_triangle(cx, cy - s, cx - s, cy + s, cx + s, cy + s, sCol);
+			else
+				al_draw_triangle(cx, cy - s, cx - s, cy + s, cx + s, cy + s, sCol, 2.0);
+
+		}
 		else
-		{
-			printf("error en dibujo de bloque\n");
+			if (ws.shape == SHAPE_CIRCLE) {
+				if (ws.filled)
+					al_draw_filled_circle(cx, cy, s, sCol);
+				else
+					al_draw_circle(cx, cy, s, sCol, 2.0);
 			}
-		// Actualizar posición del jugador         
-		actualizar_jugador(&jugador, bloques, num_bloques); 
-		// Dibujar         
-		if (redraw)
-		{
-			al_clear_to_color(al_map_rgb(255, 255, 255));
-			//Dibujar bloques             
-			dibujar_bloques(bloques, num_bloques);
-			// Dibujar jugador (cuadrado rojo)             
-			al_draw_filled_rectangle(jugador.x, jugador.y, jugador.x + jugador.ancho, jugador.y + jugador.alto, al_map_rgb(255, 0, 0));
-			redraw = false; 
-		} 
-	}  
-	
-	// Limpiar recursos     
-	al_destroy_timer(timer);
-	al_destroy_event_queue(queue); 
-	al_destroy_display(display); 
+			else
+				if (ws.shape == SHAPE_RECTANGLE) {
+					if (ws.filled)
+						al_draw_filled_rectangle(cx - s, cy - s, cx + s, cy + s, sCol);
+					else
+						al_draw_rectangle(cx - s, cy - s, cx + s, cy + s, sCol, 2.0);
+				}
 
+		al_flip_display();
+	}
+}
+
+// Función que abre la pantalla de dibujo/modal y se queda en su propio bucle
+void fondo2(WindowState& ws, ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente) {
+	bool running = true;
+	ALLEGRO_EVENT ev;
+
+	// Redibuja en respuesta a eventos hasta que se salga (ESC o clic derecho)
+	while (running) {
+		al_wait_for_event(queue, &ev);
+
+		// ELIGE CLICK IZQ, O DER
+		if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+			if (ev.mouse.button & 1) {
+				// click izquierdo: cambiar forma (ejemplo)
+				if (ws.shape == SHAPE_TRIANGLE) ws.shape = SHAPE_CIRCLE;
+				else if (ws.shape == SHAPE_CIRCLE) ws.shape = SHAPE_RECTANGLE;
+				else ws.shape = SHAPE_TRIANGLE;
+			}
+
+			if (ev.mouse.button & 2) {
+				// click derecho: salir de la pantalla
+				running = false;
+			}
+		}
+
+		// AGARRA ESC.
+		if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+			if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+				running = false;
+			}
+			// ejemplo: teclas para cambiar color/llenado
+			if (ev.keyboard.keycode == ALLEGRO_KEY_F) ws.filled = !ws.filled;
+		}
+
+		// Siempre dibujamos después de procesar eventos (simple, sin timers adicionales)
+		al_clear_to_color(ws.bgColor);
+
+		// Dibujar un indicador de "salir" en la esquina
+		ALLEGRO_COLOR backButton = al_map_rgb(80, 80, 80);
+		al_draw_filled_rectangle(10, 10, 110, 40, backButton);
+		al_draw_text(fuente, al_map_rgb(255, 255, 255), 20, 15, 0, "Salir (click derecho / ESC)");
+
+		// Dibujar la forma seleccionada
+		ALLEGRO_COLOR sCol = ws.shapeColor;
+		int cx = ws.pos_x;
+		int cy = ws.pos_y;
+		int s = ws.size;
+
+		if (ws.shape == SHAPE_TRIANGLE) {
+			if (ws.filled) {
+				al_draw_filled_triangle(cx, cy - s, cx - s, cy + s, cx + s, cy + s, sCol);
+			}
+			else {
+				al_draw_triangle(cx, cy - s, cx - s, cy + s, cx + s, cy + s, sCol, 2.0);
+			}
+		}
+		else if (ws.shape == SHAPE_CIRCLE) {
+			if (ws.filled) al_draw_filled_circle(cx, cy, s, sCol);
+			else al_draw_circle(cx, cy, s, sCol, 2.0);
+		}
+		else if (ws.shape == SHAPE_RECTANGLE) {
+			if (ws.filled) al_draw_filled_rectangle(cx - s, cy - s, cx + s, cy + s, sCol);
+			else al_draw_rectangle(cx - s, cy - s, cx + s, cy + s, sCol, 2.0);
+		}
+
+		al_flip_display();
+	}
+}
+
+int main() {
+
+
+	if (!al_init()) {
+		al_show_native_message_box(NULL, "ERROR CRITICO", "ERROR:404", "No se pudo cargar correctamente la libreria Allegro", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return -1;
+	}
+
+	//toma el ancho y alto de los pixeles de la pantalla
+	int ancho = GetSystemMetrics(SM_CXSCREEN);
+	int alto = GetSystemMetrics(SM_CYSCREEN);
+
+	//crea la ventana 
+	ALLEGRO_DISPLAY* ventana = al_create_display(AN_P, AL_P);
+	al_set_window_title(ventana, "Videojuego :]");
+	//posiciona la ventana al centro
+	al_set_window_position(ventana, ancho / 2 - AN_P / 2, alto / 2 - AL_P / 2);
+
+
+
+	//inicializa las fuentes
+	al_init_font_addon();
+	al_init_ttf_addon();
+	ALLEGRO_FONT* fuente = al_create_builtin_font();
+	if (!fuente) {
+		al_show_native_message_box(NULL, "ERROR CRITICO", "ERROR:404", "No se pudo cargar correctamente la fuente", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return -1;
+	}
+
+	//inicializando colores
+	ALLEGRO_COLOR negro = al_map_rgb(0, 0, 0);
+	ALLEGRO_COLOR blanco = al_map_rgb(255, 255, 255);
+	ALLEGRO_COLOR gris = al_map_rgb(100, 100, 100);
+
+	//inicializando el timer
+	ALLEGRO_TIMER* segundoTimer = al_create_timer(1.0);
+	ALLEGRO_TIMER* FPS = al_create_timer(1.0 / 60);
+
+	ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
+
+	al_register_event_source(queue, al_get_timer_event_source(segundoTimer));
+	al_register_event_source(queue, al_get_timer_event_source(FPS));
+	al_start_timer(segundoTimer);
+	al_start_timer(FPS);
+
+	//inicializar mouse
+	al_install_mouse();
+	al_register_event_source(queue, al_get_mouse_event_source());
+
+	// teclado (para poder salir con ESC en la pantalla secundaria)
+	al_install_keyboard();
+	al_register_event_source(queue, al_get_keyboard_event_source());
+
+	//inicializando primitivas (figuras)
+	al_init_primitives_addon();
+
+	//CICLO DEL DISPLAY
+	int segundo = 0;
+	//int countFPS = 0;
+	int x = -1, y = -1;
+	int HRZ = AN_P / 10;
+	int VRT = AL_P / 10;
+
+	while (true)
+	{
+		ALLEGRO_EVENT evento;
+		al_wait_for_event(queue, &evento);
+		if (evento.type == ALLEGRO_EVENT_TIMER) {
+			if (evento.timer.source == segundoTimer) {
+				segundo++;
+				cout << "| Seg :" << segundo << " |" << endl;
+			}
+		}
+
+		/*	if (evento.timer.source == FPS) {
+			countFPS++;
+			if (countFPS % 30 == 0) {
+				cout << countFPS << endl;
+			}
+		}  */
+
+
+
+		//MOUSE
+		if (evento.type == ALLEGRO_EVENT_MOUSE_AXES || evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+			x = evento.mouse.x;
+			y = evento.mouse.y;
+
+			al_clear_to_color(negro);
+
+
+			al_draw_filled_rectangle(HRZ / 2, VRT / 2, HRZ * 4.5, VRT * 4.5, blanco);
+			al_draw_filled_rectangle(HRZ / 2, VRT * 5.5, HRZ * 4.5, VRT * 9.5, blanco);
+			al_draw_filled_rectangle(HRZ * 5.5, VRT / 2, HRZ * 9.5, VRT * 4.5, blanco);
+			al_draw_filled_rectangle(HRZ * 5.5, VRT * 5.5, HRZ * 9.5, VRT * 9.5, blanco);
+
+
+
+			if (x >= HRZ / 2 && x <= HRZ * 4.5 && y >= VRT / 2 && y <= VRT * 4.5) {
+				// Handle click within the first rectangle
+				al_draw_filled_rectangle(HRZ / 2, VRT / 2, HRZ * 4.5, VRT * 4.5, gris);
+				if (evento.mouse.button & 1) {
+
+					// Crear estado inicial para la pantalla de dibujo y abrirla
+					WindowState ws;
+					ws.shape = SHAPE_TRIANGLE; // ejemplo: empezar con triangulo
+					ws.bgColor = negro; // limpiar a negro
+					ws.shapeColor = blanco;
+					ws.size = 80;
+					ws.pos_x = AN_P / 2;
+					ws.pos_y = AL_P / 2;
+					ws.filled = true;
+
+					// Entrar en el bucle modal para esa ventana/editor
+					cout << "| Click en el primer rectangulo |" << endl;
+					fondo1(ws, ventana, queue, fuente);
+
+
+				}
+			}
+
+			if (x >= HRZ * 5.5 && x <= HRZ * 9.5 && y >= VRT / 2 && y <= VRT * 4.5) {
+				// Handle click within the third rectangle
+				al_draw_filled_rectangle(HRZ * 5.5, VRT / 2, HRZ * 9.5, VRT * 4.5, gris);
+				if (evento.mouse.button & 1) {
+					// Crear estado inicial para la pantalla de dibujo y abrirla
+					WindowState ws;
+
+					ws.shape = SHAPE_TRIANGLE; // ejemplo: empezar con triangulo
+					ws.bgColor = negro; // limpiar a negro
+					ws.shapeColor = blanco;
+					ws.size = 80;
+					ws.pos_x = AN_P / 2;
+					ws.pos_y = AL_P / 2;
+					ws.filled = true;
+
+					// Entrar en el bucle modal para esa ventana/editor
+					cout << "| Click en el segundo rectangulo |" << endl;
+					fondo2(ws, ventana, queue, fuente);
+
+
+				}
+			}
+
+
+			if (x >= HRZ / 2 && x <= HRZ * 4.5 && y >= VRT * 5.5 && y <= VRT * 9.5) {
+				// Handle click within the second rectangle
+				al_draw_filled_rectangle(HRZ / 2, VRT * 5.5, HRZ * 4.5, VRT * 9.5, gris);
+				if (evento.mouse.button & 1) {
+
+					cout << "| Click en el tercer rectangulo |" << endl;
+				}
+			}
+
+
+			if (x >= HRZ * 5.5 && x <= HRZ * 9.5 && y >= VRT * 5.5 && y <= VRT * 9.5) {
+				// Handle click within the fourth rectangle
+				al_draw_filled_rectangle(HRZ * 5.5, VRT * 5.5, HRZ * 9.5, VRT * 9.5, gris);
+				if (evento.mouse.button & 1) {
+
+					cout << "| Click en el cuarto rectangulo |" << endl;
+				}
+			}
+
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// FIGURAS:
+
+
+		//al_draw_text(fuente, al_map_rgb(255, 255, 255), 200, 200, 0, ("Segundo: " + to_string(segundo).c_str())); // REPARAR FUENTES :((
+
+
+		al_flip_display();
+	}
 	return 0;
 }
