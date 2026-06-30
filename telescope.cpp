@@ -11,7 +11,7 @@
 #include <Windows.h>
 
 #define AN_P 1500
-#define AL_P 1000
+#define AL_P 1500
 #define DIV_HRZ 10
 #define	DIV_VRT 10
 
@@ -33,16 +33,19 @@ typedef struct {
 // Función que abre la pantalla de dibujo/modal y se queda en su propio bucle
 // Pantalla secundaria: dibuja fondo y mueve al jugador
 // Movemos el cuadrado por pasos de `jug.velocidad` en cada eje cuando
-void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, ALLEGRO_KEYBOARD_STATE& estado_teclado, creature& jug, int casilla[10][10]) {
+void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, ALLEGRO_KEYBOARD_STATE& estado_teclado, creature& jug, int mapa_total[20][20], int fstrow, int fstcol) {
 	bool running = true;
 	ALLEGRO_EVENT ev;
+
+	//fstrow = primer row
+	//fstcol = primer col
 
 	// imprimir mapa una sola vez
 	static bool printed = false;
 	if (!printed) {
-		for (int row = 0; row < 10; ++row)
-			for (int col = 0; col < 10; ++col)	2
-				cout << "casilla r:" << row << " c: " << col << " valor: " << casilla[row][col] << endl;
+		for (int row = fstrow; row < fstrow+10; ++row)
+			for (int col = fstcol; col < fstcol+10; ++col)	
+				cout << "casilla r:" << row << " c: " << col << " valor: " << mapa_total[row][col] << endl;
 		printed = true;
 	}
 
@@ -82,9 +85,9 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 			if (leftCell < 0 || topCell < 0 || rightCell >= DIV_HRZ || bottomCell >= DIV_VRT)
 				return false; // fuera de los límites -> no permitido
 
-			for (int r = topCell; r <= bottomCell; ++r)
-				for (int c = leftCell; c <= rightCell; ++c)
-					if (casilla[r][c] == 1)
+			for (int fstrow = topCell; fstrow <= bottomCell; ++fstrow)
+				for (int fstcol = leftCell; fstcol <= rightCell; ++fstcol)
+					if (mapa_total[fstrow][fstcol] == 1)
 						return false;
 			return true;
 		};
@@ -117,19 +120,22 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 			al_map_rgb(255, 0, 0));
 
 		// Dibujar las celdas bloqueadas según la matriz casilla[row][col]
-		for (int row = 0; row < DIV_VRT; ++row) {
-			for (int col = 0; col < DIV_HRZ; ++col) {
-				if (casilla[row][col] == 1) {
+		for (int row = fstrow; row < DIV_VRT+fstrow; ++row) {
+			for (int col = fstcol; col < DIV_HRZ+fstcol; ++col) {
+				if (mapa_total[row][col] == 1) {
 					al_draw_filled_rectangle(col * tileW, row * tileH, col * tileW + tileW, row * tileH + tileH, al_map_rgb(255, 255, 255));
+					
 				}
 			}
 		}
 
 		// Botón/salida simple
 		al_draw_text(fuente, al_map_rgb(255, 255, 255), 50, 50, 0, "Salir con ESC");
-		if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+		if (ev.type == ALLEGRO_EVENT_KEY_DOWN && ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
 			running = false;
-
+			al_clear_to_color(al_map_rgb
+			(0, 0, 0));
+		}
 		/*al_draw_filled_rectangle(0, 0, AN_P / 100, AL_P, al_map_rgb(100, 100, 100));
 		al_draw_filled_rectangle(0, 0, AN_P, AL_P / 100, al_map_rgb(100, 100, 100));
 		al_draw_filled_rectangle(0, AL_P - AL_P / 100, AN_P, AL_P, al_map_rgb(100, 100, 100));
@@ -138,6 +144,7 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 		al_flip_display();
 	}
 }
+
 
 
 int main() {
@@ -203,19 +210,44 @@ int main() {
 	int x = -1, y = -1;
 	int HRZ = AN_P / DIV_HRZ;
 	int VRT = AL_P / DIV_VRT;
-			
-	int casilla[10][10] {
-	1,	1,	0,	0,	1,	1,  0,  0,	1,	1,
-	1,	1,	0,	0,	1,	1,	0,	0,	1,	1,	
-	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	
-	1,	1,	0,	0,	0,	0,	1,	0,	0,	0,
-	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,
-	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	
-	1,	1,	0,	0,	0,	1,	1,	1,	0,	0,	
-	1,	1,	0,	0,	0,	0,	1,	1,	1,	0,	
-	1,	1,	0,	0,	0,	0,	0,	0,	0,	0,	
-	1,	1,	0,	0,	0,	0,	0,	0,	0,	0, 
+	int fstrow, fstcol;
+	
+	int casilla[10][10]{
+	1,	1,	1,	1,	1,	1,  1,  1,	1,	1,
+	1,	1,	0,	0,	0,	0,	0,	0,	1,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,
+	1,	0,	0,	1,	1,	1,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	1,	0,	0,	0,
+	1,	0,	0,	0,	0,	0,	1,	0,	0,	0,
+	1,	0,	0,	1,	1,	1,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,
+	1,	0,	0,	1,	1,	1,	1,	0,	0,	1,
 	};
+
+	int mapa_total[20][20]{ 
+	1,	1,	1,	1,	1,	1,  1,  1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,
+	1,	1,	0,	0,	0,	0,	2,	0,	1,	1,	0,	0,	0,	0,	2,	0,	0,	9,	9,	1,
+	1,	0,	0,	0,	0,	0,	2,	0,	0,	1,	0,	0,	0,	0,	2,	0,	0,	9,	9,	1,
+	1,	0,	0,	1,	1,	1,	1,	0,	0,	1,	0,	0,	1,	1,	1,	1,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	1,	0,	0,	1,	0,	0,	1,	0,	0,	0,	1,	0,	0,	1,	
+	1,	0,	0,	0,	0,	0,	1,	0,	0,	1,	0,	0,	1,	0,	0,	0,	1,	2,	2,	1,
+	1,	0,	0,	1,	2,	2,	1,	0,	0,	1,	0,	0,	1,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	1,	9,	9,	1,	0,	0,	2,	0,	0,	1,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	1,	9,	9,	1,	0,	0,	2,	0,	0,	1,	0,	0,	0,	1,	0,	0,	1,
+	1,	2,	2,	1,	1,	1,	1,	0,	0,	1,	1,	1,	1,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	2,	0,	0,	0,	0,	0,	0,	2,	0,	0,	1,	
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	2,	0,	0,	0,	0,	0,	0,	2,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	1,	1,	1,	0,	1,	1,	0,	1,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	2,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,
+	1,	0,	0,	0,	0,	0,	0,	0,	0,	2,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,
+	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,  1,	1,	1,	1,  1,	1,	1,	1,
+	};
+	
 
 	while (true)
 	{
@@ -258,9 +290,12 @@ int main() {
 					jug.y = 0;
 					jug.velocidad = 5;
 
+					fstrow = 0;
+					fstcol = 0;
+
 					// Entrar en el bucle modal para esa ventana/editor
 					cout << "| Click en el primer rectangulo |" << endl;
-					fondo1(ventana, queue, fuente, estado_teclado, jug, casilla);
+					fondo1(ventana, queue, fuente, estado_teclado, jug, mapa_total, fstrow, fstcol);
 
 
 				}
@@ -269,10 +304,22 @@ int main() {
 
 
 			if (x >= HRZ * 5.5 && x <= HRZ * 9.5 && y >= VRT / 2 && y <= VRT * 4.5) {
-				// Handle click within the third rectangle
 				al_draw_filled_rectangle(HRZ * 5.5, VRT / 2, HRZ * 9.5, VRT * 4.5, gris);
 				if (evento.mouse.button & 1) {
+					creature jug;
+					jug.size = 100;
+					jug.pos_x = AN_P / 2 - jug.size / 2;
+					jug.pos_y = AL_P / 2 - jug.size / 2;
+					jug.x = 0;
+					jug.y = 0;
+					jug.velocidad = 5;
+
+					fstrow = 10;
+					fstcol = 0;
+
+					// Entrar en el bucle modal para esa ventana/editor
 					cout << "| Click en el segundo rectangulo |" << endl;
+					fondo1(ventana, queue, fuente, estado_teclado, jug, mapa_total, fstrow, fstcol);
 				}
 			}
 
