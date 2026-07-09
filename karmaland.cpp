@@ -1,10 +1,10 @@
-#include <iostream>
+#include <iostream>// no es c sacar 
 #include <stdio.h>
 #include <stdlib.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h>}
+#include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 #include <string>
 #include <vector>
@@ -21,7 +21,7 @@
 const int MAP_W = (AN_P / DIV_HRZ) * MAP_COLS;
 const int MAP_H = (AL_P / DIV_VRT) * MAP_ROWS;
 
-using namespace std;
+using namespace std; //no es c
 
 typedef struct {
 	int x;
@@ -45,12 +45,12 @@ void toggleDoorComponent(int mapa[20][20], int startR, int startC) {
 	if (orig != 2 && orig != 3) return; // no es puerta
 	int target = (orig == 2) ? 3 : 2; // 2->3 (abrir), 3->2 (cerrar)
 
-	// BFS
-	std::vector<std::pair<int,int>> stack;
-	stack.push_back({startR,startC});
+	// Cambiar a c
+	std::vector<std::pair<int,int>> stack; //// No es C
+	stack.push_back({startR,startC}); /// tamopo c
 	mapa[startR][startC] = target;
-	while (!stack.empty()) {
-		auto p = stack.back(); stack.pop_back();
+	while (!stack.empty()) { //  stack.empty no es c
+		auto p = stack.back(); stack.pop_back(); /// stack.back()tampoco c 
 		int r = p.first, c = p.second;
 		const int dr[4] = {-1,1,0,0};
 		const int dc[4] = {0,0,-1,1};
@@ -66,7 +66,7 @@ void toggleDoorComponent(int mapa[20][20], int startR, int startC) {
 	}
 }
 
-void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, ALLEGRO_KEYBOARD_STATE& estado_teclado, creature& jug, int mapa_total[20][20], int fstrow, int fstcol) {
+void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, ALLEGRO_KEYBOARD_STATE& estado_teclado, creature& jug /*asi no se hacen las referencias */ , int mapa_total[20][20], int fstrow, int fstcol) {
 	bool running = true;
 	ALLEGRO_EVENT ev;
 
@@ -78,7 +78,7 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 	if (!printed) {
 		for (int row = fstrow; row < fstrow + 10; ++row)
 			for (int col = fstcol; col < fstcol + 10; ++col)
-				cout << "casilla r:" << row << " c: " << col << " valor: " << mapa_total[row][col] << endl;
+				cout << "casilla r:" << row << " c: " << col << " valor: " << mapa_total[row][col] << endl; //usar printf
 		printed = true;
 	}
 
@@ -109,7 +109,7 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 		const int tileH = AL_P / DIV_VRT;
 
 		// Comprobar colisiones sencillas por celda: calcula las celdas que ocuparía
-		auto isFreeAt = [&](int candX, int candY) -> bool {
+		auto isFreeAt = [&](int candX, int candY) -> bool { // nope
 			int leftCell = candX / tileW;
 			int rightCell = (candX + jug.size - 1) / tileW;
 			int topCell = candY / tileH;
@@ -130,7 +130,7 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 		// Mover el jugador por pasos de `velocidad` según flechas, con comprobación de colisión
 		if (al_key_down(&estado_teclado, ALLEGRO_KEY_UP)) {
 			int ny = jug.pos_y - jug.velocidad;
-			if (isFreeAt(jug.pos_x, ny)) jug.pos_y = ny;
+			if (isFreeAt(jug.pos_x, ny)) jug.pos_y = ny;  // deberia ser jug->pos_x no jug.pos_x
 		}
 		if (al_key_down(&estado_teclado, ALLEGRO_KEY_DOWN)) {
 			int ny = jug.pos_y + jug.velocidad;
@@ -152,7 +152,7 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 		if (jug.pos_y + jug.size > MAP_H) jug.pos_y = MAP_H - jug.size;
 
 		// Comprobar si el jugador ha pisado una celda con valor 9 (perder)
-		auto playerOnLosingCell = [&]() -> bool {
+		auto playerOnLosingCell = [&]() -> bool { //????
 			int leftCell = jug.pos_x / tileW;
 			int rightCell = (jug.pos_x + jug.size - 1) / tileW;
 			int topCell = jug.pos_y / tileH;
@@ -243,7 +243,7 @@ void fondo1(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* 
 				}
 				if (targetR != -1) {
 					toggleDoorComponent(mapa_total, targetR, targetC);
-					cout << "Toggle puertas en r=" << targetR << " c=" << targetC << endl;
+					cout << "Toggle puertas en r=" << targetR << " c=" << targetC << endl;  //prinntf
 				}
 			}
 		}
@@ -323,7 +323,7 @@ int main() {
 	int VRT = AL_P / DIV_VRT;
 	int fstrow, fstcol;
 
-	int casilla[10][10]{
+	int casilla[10][10]{  /// [][] = {}
 	1,	1,	1,	1,	1,	1,  1,  1,	1,	1,
 	1,	1,	0,	0,	0,	0,	0,	0,	1,	1,
 	1,	0,	0,	0,	0,	0,	0,	0,	0,	1,
@@ -336,7 +336,7 @@ int main() {
 	1,	0,	0,	1,	1,	1,	1,	0,	0,	1,
 	};
 
-	int mapa_total[20][20]{
+	int mapa_total[20][20]{ /// [][] = {}
 	1,	1,	1,	1,	1,	1,  1,  1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,
 	1,	0,	0,	0,	0,	0,	2,	0,	0,	1,	1,	0,	0,	0,	0,	0,	2,	9,	9,	1,
 	1,	0,	0,	0,	0,	0,	2,	0,	0,	1,	1,	0,	0,	0,	0,	0,	2,	9,	9,	1,
@@ -384,7 +384,7 @@ int main() {
 		if (evento.type == ALLEGRO_EVENT_TIMER) {
 			if (evento.timer.source == segundoTimer) {
 				segundo++;
-				cout << "| Seg :" << segundo << " |" << endl;
+				cout << "| Seg :" << segundo << " |" << endl;  //printf
 			}
 		}
 
@@ -409,7 +409,7 @@ int main() {
 				if (evento.mouse.button & 1) {
 					// Mostrar cuadrante superior izquierdo sin alterar la posición del jugador
 					fstrow = 0; fstcol = 0;
-					cout << "| Click en el primer rectangulo |" << endl;
+					cout << "| Click en el primer rectangulo |" << endl; /// printf 
 					fondo1(ventana, queue, fuente, estado_teclado, player, mapa_total, fstrow, fstcol);
 				}
 			}
@@ -421,7 +421,7 @@ int main() {
 				if (evento.mouse.button & 1) {
 					// Mostrar cuadrante superior derecho sin alterar la posición del jugador
 					fstrow = 0; fstcol = 10;
-					cout << "| Click en el segundo rectangulo |" << endl;
+					cout << "| Click en el segundo rectangulo |" << endl; // usar printf
 					fondo1(ventana, queue, fuente, estado_teclado, player, mapa_total, fstrow, fstcol);
 				}
 			}
@@ -433,7 +433,7 @@ int main() {
 				if (evento.mouse.button & 1) {
 					// Mostrar cuadrante inferior izquierdo sin alterar la posición del jugador
 					fstrow = 10; fstcol = 0;
-					cout << "| Click en el tercer rectangulo |" << endl;
+					cout << "| Click en el tercer rectangulo |" << endl; ///usar printf
 					fondo1(ventana, queue, fuente, estado_teclado, player, mapa_total, fstrow, fstcol);
 				}
 			}
