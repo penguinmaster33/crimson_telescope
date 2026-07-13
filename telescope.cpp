@@ -9,7 +9,7 @@
 #include <string>
 #include <Windows.h>
 
-#define AN_P 1200
+#define AN_P 1000
 #define AL_P 1000
 
 // PROBLEMAS MAYORES:
@@ -18,7 +18,8 @@
 // 3. Reparar menu
 
 typedef struct {
-	int size;
+	int size_x;
+	int size_y;
 	int pos_x;
 	int pos_y;
 	int velocidad;
@@ -37,10 +38,10 @@ typedef struct {
 	bool filled;
 } WindowState;
 
-void menu(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_TIMER *segundoTimer, ALLEGRO_TIMER *FPS, ALLEGRO_FONT *fuente);
-void ciclo(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_TIMER *segundoTimer, ALLEGRO_TIMER *FPS, ALLEGRO_FONT *fuente);
-void dibujo(ALLEGRO_FONT *fuente, int mapa_total[20][20], int esq);
-void fondo(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_FONT *fuente, int mapa_total[20][20], int esq);
+void menu(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* segundoTimer, ALLEGRO_TIMER* FPS, ALLEGRO_FONT* fuente);
+void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* segundoTimer, ALLEGRO_TIMER* FPS, ALLEGRO_FONT* fuente);
+void dibujo(ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad);
+void fondo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad);
 
 
 
@@ -56,7 +57,7 @@ int main() {
 	int alto = GetSystemMetrics(SM_CYSCREEN);
 
 	//crea la ventana 
-	ALLEGRO_DISPLAY *ventana = al_create_display(AN_P, AL_P);
+	ALLEGRO_DISPLAY* ventana = al_create_display(AN_P, AL_P);
 	al_set_window_title(ventana, "Videojuego :]");
 	//posiciona la ventana al centro
 	al_set_window_position(ventana, ancho / 2 - AN_P / 2, alto / 2 - AL_P / 2);
@@ -66,7 +67,7 @@ int main() {
 	//inicializa las fuentes
 	al_init_font_addon();
 	al_init_ttf_addon();
-	ALLEGRO_FONT *fuente = al_create_builtin_font();
+	ALLEGRO_FONT* fuente = al_create_builtin_font();
 	if (!fuente) {
 		al_show_native_message_box(NULL, "ERROR CRITICO", "ERROR:404", "No se pudo cargar correctamente la fuente", NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return -1;
@@ -76,8 +77,8 @@ int main() {
 
 
 	//inicializando el timer
-	ALLEGRO_TIMER *segundoTimer = al_create_timer(1.0);
-	ALLEGRO_TIMER *FPS = al_create_timer(1.0 / 120);
+	ALLEGRO_TIMER* segundoTimer = al_create_timer(1.0);
+	ALLEGRO_TIMER* FPS = al_create_timer(1.0 / 120);
 
 	ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
 
@@ -103,8 +104,8 @@ int main() {
 }
 
 
-void menu(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_TIMER *segundoTimer, ALLEGRO_TIMER *FPS, ALLEGRO_FONT *fuente) {
-	int x = -1; 	
+void menu(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* segundoTimer, ALLEGRO_TIMER* FPS, ALLEGRO_FONT* fuente) {
+	int x = -1;
 	int y = -1;
 	int HRZ = AN_P / 10;
 	int VRT = AL_P / 10;
@@ -113,12 +114,12 @@ void menu(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_TIMER *s
 	ALLEGRO_COLOR gris = al_map_rgb(100, 100, 100);
 
 	ALLEGRO_EVENT evento;
-	al_wait_for_event(queue, &evento);
+	
 
 
 
 	int andar = 1;
-	
+
 	while (andar) {
 		al_wait_for_event(queue, &evento);
 
@@ -126,8 +127,6 @@ void menu(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_TIMER *s
 		if (evento.type == ALLEGRO_EVENT_MOUSE_AXES || evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
 			x = evento.mouse.x;
 			y = evento.mouse.y;
-
-			//printf("evento x: %d, y: %d\n", x, y); //no importante
 			if (x >= HRZ * 2 && x <= HRZ * 9.5 && y >= VRT / 2 && y <= VRT * 9.5) {
 				al_draw_filled_rectangle(HRZ / 2, VRT / 2, HRZ * 9.5, VRT * 9.5, gris);
 				if (evento.mouse.button == 1) {
@@ -147,7 +146,7 @@ void menu(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_TIMER *s
 		printf("programa cerrado");
 }
 
-void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* segundoTimer, ALLEGRO_TIMER* FPS, ALLEGRO_FONT* fuente){
+void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* segundoTimer, ALLEGRO_TIMER* FPS, ALLEGRO_FONT* fuente) {
 
 	//CICLO DEL DISPLAY
 	int segundo = 0;
@@ -156,11 +155,11 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 	int HRZ = AN_P / 10; //100
 	int VRT = AL_P / 10; //100
 
-	int mapa_total1[20][20] = { 
+	int mapa_total[20][20] = {
 	1,	1,	1,	1,	1,	1,  1,  1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,
-	1,	0,	0,	0,	0,	0,	2,	0,	0,	1,	1,	0,	0,	0,	0,	0,	0,	9,	9,	1,
-	1,	0,	0,	0,	0,	0,	2,	0,	0,	1,	1,	0,	0,	0,	0,	0,	0,	9,	9,	1,
-	1,	0,	0,	1,	2,	2,	1,	0,	0,	1,	1,	2,	2,	1,	1,	1,	1,	2,	2,  1,
+	1,	0,	0,	2,	0,	0,	2,	0,	0,	1,	1,	0,	0,	0,	0,	0,	0,	9,	9,	1,
+	1,	0,	0,	2,	0,	0,	2,	0,	0,	1,	1,	0,	0,	0,	0,	0,	0,	9,	9,	1,
+	1,	0,	0,	1,	0,  0,	1,	0,	0,	1,	1,	2,	2,	1,	1,	1,	1,	2,	2,  1,
 	1,	0,	0,	1,	0,	0,	1,	0,	0,	1,	1,	0,	0,	1,	0,	0,	1,	0,	0,	1,
 	1,	0,	0,	1,	0,	0,	1,	0,	0,	1,	1,	0,	0,	1,	0,	0,	1,	0,	0,	1,
 	1,	0,	0,	1,	0,	0,	1,	0,	0,	1,	1,	0,	0,	1,	0,	0,	1,	0,	0,	1,
@@ -178,17 +177,22 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 	1,	0,	0,	0,	0,	0,	0,	0,	0,	2,	2,	0,	0,	0,	0,	0,	0,	0,	0,	1,
 	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,  1,	1,	1,	1,  1,	1,	1,	1,
 	};
-	
-	int i, j;
-	int mapa_total[20][20];
-	for (i = 0; i < 20; i++)
+
+	int i=0, j=0;
+	//int mapa_total2[20][20];
+	/*for (i = 0; i < 20; i++)
 		for (j = 0; j < 20; j++) {
 			scanf("%d", &mapa_total);
 			printf("%d", mapa_total[i][j]);
 		}
+	*/
 	creature cuad;
-	cuad.size = 20;
+	cuad.pos_x = 2 * HRZ;
+	cuad.pos_y = 2 * VRT;
+	cuad.size_x=AN_P /10;
+	cuad.size_y=AL_P /10;
 	cuad.velocidad = 5;
+	
 	int camara = 0, esq = 0;
 
 	while (true)
@@ -208,8 +212,7 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 				printf("| Seg : %d |\n", segundo);
 			}
 		}
-		cuad.pos_x = 2 * HRZ;
-		cuad.pos_x = 2 * VRT;
+		
 
 		if (evento.type == ALLEGRO_EVENT_MOUSE_AXES || evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && camara == 0) {
 			x = evento.mouse.x;
@@ -229,7 +232,6 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 				if (evento.mouse.button == 1) {
 					esq = 1;
 					printf("Cuadrante 1\n");
-					//fondo(ventana, queue, fuente, mapa_total, esq);
 					camara = 1;
 				}
 			}
@@ -239,7 +241,6 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 				if (evento.mouse.button == 1) {
 					esq = 2;
 					printf("Cuadrante 2\n");
-					//fondo(ventana, queue, fuente, mapa_total, esq);
 					camara = 2;
 				}
 			}
@@ -249,7 +250,6 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 				al_draw_filled_rectangle(HRZ / 2, VRT * 5.5, HRZ * 4.5, VRT * 9.5, gris);
 				if (evento.mouse.button == 1) {
 					esq = 3;
-					//fondo(ventana, queue, fuente, mapa_total, esq);
 					printf("Cuadrante 3\n");
 					camara = 3;
 				}
@@ -257,10 +257,9 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 
 
 			if (x >= HRZ * 5.5 && x <= HRZ * 9.5 && y >= VRT * 5.5 && y <= VRT * 9.5) {
-				al_draw_filled_rectangle(HRZ * 5.5,	 VRT * 5.5, HRZ * 9.5, VRT * 9.5, gris);
+				al_draw_filled_rectangle(HRZ * 5.5, VRT * 5.5, HRZ * 9.5, VRT * 9.5, gris);
 				if (evento.mouse.button == 1) {
 					esq = 4;
-					//fondo(ventana, queue, fuente, mapa_total, esq);
 					printf("Cuadrante 4\n");
 					camara = 4;
 				}
@@ -268,91 +267,116 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 		}
 
 		if (camara == 1)
-			fondo(ventana, queue, fuente, mapa_total, esq);
-		else if( camara==2)
-			fondo(ventana, queue, fuente, mapa_total, esq);
+			fondo(ventana, queue, fuente, mapa_total, esq, cuad);
+		else if (camara == 2)
+			fondo(ventana, queue, fuente, mapa_total, esq, cuad);
 		else if (camara == 3)
-			fondo(ventana, queue, fuente, mapa_total, esq);
+			fondo(ventana, queue, fuente, mapa_total, esq, cuad);
 		else if (camara == 4)
-			fondo(ventana, queue, fuente, mapa_total, esq);
-		
-		if (evento.type == ALLEGRO_EVENT_KEY_DOWN) 
-			if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
-				camara = 0;
-				esq = 0;
-				printf("ESCAPE PRESIONADO, SALIR DE 'fondo'\n");
-			}
+			fondo(ventana, queue, fuente, mapa_total, esq, cuad);
 
 		
+		if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) {// JUGADOR PRESIONO TECLA. CICLO FOR PARA REVISAR CADA BORDE PARA HACER COLISIONES.
+			for (i = 0;i < 20;i++)
+				for (j = 0;j < 20;j++)
+					if (mapa_total[i][j] < cuad.pos_y) // QUIERO GUARDAR EL CUADRANTE EN EL QUE ESTÁ CADA BORDE DE ESTE INDIVIDUO PARA COMPARARLO CON EL BORDE DE ABAJO MAS FACILMENTE
+						;
+
+
+						
+
+
+						
+		}
+
+		if (mapa_total[][])
+			cuad.pos_x = cuad.pos_x - cuad.velocidad;
+
+		if (cuad.pos_y < AL_P / 20) 
+			cuad.pos_y = cuad.pos_y - cuad.velocidad;
+
+		if (cuad.pos_x + cuad.size_x > AN_P) 
+			cuad.pos_x = AN_P - cuad.size_x ;
+
+		if (cuad.pos_y + cuad.size_y > AL_P) 
+			cuad.pos_y = AL_P - cuad.size_y;
+
+
+
+		if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+			camara = 0;
+			esq = 0;
+			printf("ESCAPE PRESIONADO, SALIR DE 'fondo'\n");
+		}
 		al_flip_display();
 	}
 }
 
-void fondo(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_FONT *fuente, int mapa_total[20][20], int esq) {
+void fondo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad) {
 	bool running = true;
 	ALLEGRO_EVENT ev;
-		al_wait_for_event(queue, &ev);
+	al_wait_for_event(queue, &ev);
 
-		int xplus = 0, yplus = 0;
-		int i, j;
-		int x, y;
-		int limPuertaX, limPuertaY;
-		int celAn = AN_P /10; // un decimo de tamanho de pantalla
-		int celAl = AL_P /10;
-
-
-		if (esq == 1) {
-			xplus = 0;			yplus = 0;
-		}
-		else if (esq == 2) {
-			xplus = 10;			yplus = 0;
-		}
-		else if (esq == 3) {
-			xplus = 0;			yplus = 10;
-		}
-		else if (esq == 4) {	
-			xplus = 10;			yplus = 10;
-		}
-		
+	int xplus = 0, yplus = 0;
+	int i, j;
+	int x, y;
+	int limPuertaX, limPuertaY;
+	int celAn = AN_P / 10; // un decimo de tamanho de pantalla
+	int celAl = AL_P / 10;
 
 
-		if (ev.type == ALLEGRO_EVENT_MOUSE_AXES || ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
-			x = ev.mouse.x;
-			y = ev.mouse.y;
+	if (esq == 1) {
+		xplus = 0;			yplus = 0;
+	}
+	else if (esq == 2) {
+		xplus = 10;			yplus = 0;
+	}
+	else if (esq == 3) {
+		xplus = 0;			yplus = 10;
+	}
+	else if (esq == 4) {
+		xplus = 10;			yplus = 10;
+	}
 
 
-			for (i = 0; i < 10; ++i) {
-				for (j = 0; j < 10; ++j) {
-					if (mapa_total[i + yplus][j + xplus] == 2 || mapa_total[i+yplus][j+xplus]==3) {
-						limPuertaX = j * celAn;
-						limPuertaY = i * celAl;
-						if (x >= limPuertaX && x <= limPuertaX + celAn && y >= limPuertaY && y <= limPuertaY + celAl) {
 
-							if (ev.mouse.button == 1) {
+	if (ev.type == ALLEGRO_EVENT_MOUSE_AXES || ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
+		x = ev.mouse.x;
+		y = ev.mouse.y;
 
-								if (mapa_total[i + yplus][j + xplus] == 2) { // OKAY; AQUI ES PUERTA CERRADA. A chequear adyacentes!
-									mapa_total[i + yplus][j + xplus] = 3;
 
-									if (mapa_total[i + yplus - 1][j + xplus] == 2)
-										mapa_total[i + yplus - 1][j + xplus] = 3;
-									if (mapa_total[i + yplus + 1][j + xplus] == 2)
-										mapa_total[i + yplus + 1][j + xplus] = 3;
-									if (mapa_total[i + yplus][j + xplus - 1] == 2)
-										mapa_total[i + yplus][j + xplus - 1] = 3;
-									if (mapa_total[i + yplus][j + xplus + 1] == 2)
-										mapa_total[i + yplus][j + xplus + 1] == 3;
-									if (mapa_total[i + yplus - 1][j + xplus - 1] == 2)
-										mapa_total[i + yplus - 1][j + xplus - 1] = 3;
-									if (mapa_total[i + yplus - 1][j + xplus + 1] == 2)
-										mapa_total[i + yplus - 1][j + xplus + 1] = 3;
-									if (mapa_total[i + yplus + 1][j + xplus - 1] == 2)
-										mapa_total[i + yplus + 1][j + xplus - 1] = 3;
-									if (mapa_total[i + yplus + 1][j + xplus + 1] == 2)
-										mapa_total[i + yplus + 1][j + xplus + 1] = 3;
-								}
+		for (i = 0; i < 10; ++i) {
+			for (j = 0; j < 10; ++j) {
+				if (mapa_total[i + yplus][j + xplus] == 2 || mapa_total[i + yplus][j + xplus] == 3) {
+					limPuertaX = j * celAn;
+					limPuertaY = i * celAl;
+					if (x >= limPuertaX && x <= limPuertaX + celAn && y >= limPuertaY && y <= limPuertaY + celAl) {
 
-								else if (mapa_total[i + yplus][j + xplus] == 3) { // OKAY; AQUI ES PUERTA ABIERTA. A chequear adyacentes!
-									mapa_total[i + yplus][j + xplus] = 2;
+						if (ev.mouse.button == 1) {
+
+							if (mapa_total[i + yplus][j + xplus] == 2) { // OKAY; AQUI ES PUERTA CERRADA. A chequear adyacentes!
+								mapa_total[i + yplus][j + xplus] = 3;
+
+								if (mapa_total[i + yplus - 1][j + xplus] == 2)
+									mapa_total[i + yplus - 1][j + xplus] = 3;
+								if (mapa_total[i + yplus + 1][j + xplus] == 2)
+									mapa_total[i + yplus + 1][j + xplus] = 3;
+								if (mapa_total[i + yplus][j + xplus - 1] == 2)
+									mapa_total[i + yplus][j + xplus - 1] = 3;
+								if (mapa_total[i + yplus][j + xplus + 1] == 2)
+									mapa_total[i + yplus][j + xplus + 1] = 3;
+								if (mapa_total[i + yplus - 1][j + xplus - 1] == 2)
+									mapa_total[i + yplus - 1][j + xplus - 1] = 3;
+								if (mapa_total[i + yplus - 1][j + xplus + 1] == 2)
+									mapa_total[i + yplus - 1][j + xplus + 1] = 3;
+								if (mapa_total[i + yplus + 1][j + xplus - 1] == 2)
+									mapa_total[i + yplus + 1][j + xplus - 1] = 3;
+								if (mapa_total[i + yplus + 1][j + xplus + 1] == 2)
+									mapa_total[i + yplus + 1][j + xplus + 1] = 3;
+							}
+
+							else if (mapa_total[i + yplus][j + xplus] == 3) { // OKAY; AQUI ES PUERTA ABIERTA. A chequear adyacentes!
+								mapa_total[i + yplus][j + xplus] = 2;
 
 								if (mapa_total[i + yplus - 1][j + xplus] == 3)
 									mapa_total[i + yplus - 1][j + xplus] = 2;
@@ -362,35 +386,37 @@ void fondo(ALLEGRO_DISPLAY *ventana, ALLEGRO_EVENT_QUEUE *queue, ALLEGRO_FONT *f
 									mapa_total[i + yplus][j + xplus - 1] = 2;
 								if (mapa_total[i + yplus][j + xplus + 1] == 3)
 									mapa_total[i + yplus][j + xplus + 1] = 2;
-								if (mapa_total[i + yplus - 1][j + xplus -1] == 3)
-									mapa_total[i + yplus - 1][j + xplus -1] = 2;
+								if (mapa_total[i + yplus - 1][j + xplus - 1] == 3)
+									mapa_total[i + yplus - 1][j + xplus - 1] = 2;
 								if (mapa_total[i + yplus - 1][j + xplus + 1] == 3)
-									mapa_total[i + yplus - 1][j + xplus + 1] = 2;
+									mapa_total[i + yplus - 1][j + xplus +
+									1] = 2;
 								if (mapa_total[i + yplus + 1][j + xplus - 1] == 3)
 									mapa_total[i + yplus + 1][j + xplus - 1] = 2;
 								if (mapa_total[i + yplus + 1][j + xplus + 1] == 3)
-									mapa_total[i + yplus + 1][j + xplus + 1] = 2;	
-								}
-
-								printf("click en puerta\n");
+									mapa_total[i + yplus + 1][j + xplus + 1] = 2;
 							}
 
+							printf("click en puerta\n");
 						}
 					}
 				}
 			}
 		}
-		
+	}
 
-		al_clear_to_color(al_map_rgb(0, 0, 0));
-		dibujo(fuente, mapa_total, esq);
+	if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
+		if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN) {
+			cuad.pos_y = cuad.pos_y + cuad.velocidad;
+			printf("tecla abajo presionada");
+		}
+	}
 
-		ALLEGRO_COLOR backButton = al_map_rgb(80, 80, 80);
-		al_draw_filled_rectangle(10, 10, 110, 40, backButton);
-		al_draw_text(fuente, al_map_rgb(255, 255, 255), 20, 15, 0, "Salir (click derecho / ESC\n");
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+	dibujo(fuente, mapa_total, esq, cuad);
 }
 
-void dibujo(ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq)
+void dibujo(ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad)
 {
 	int i, j;
 	al_clear_to_color(al_map_rgb(0, 0, 0));
@@ -450,17 +476,8 @@ void dibujo(ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq)
 			}
 		}
 	}
-}
-/*	WindowState ws;
-	ws.bgColor = blanco; // limpiar a blanco
-	ws.shapeColor = negro;
-	ws.size = 80;
-	ws.pos_x = AN_P / 2;
-	ws.pos_y = AL_P / 2;
-	ws.filled = true;
-*/
 
-/*	if (cuad.pos_x < AN_P / 20) cuad.pos_x = 0;
-	if (cuad.pos_y < AL_P/20) cuad.pos_y = 0;
-	if (cuad.pos_x + cuad.size > AN_P) cuad.pos_x = AN_P - cuad.size;
-	if (cuad.pos_y + cuad.size > AL_P) cuad.pos_y = AL_P - cuad.size;*/
+	al_draw_filled_rectangle(cuad.pos_x, cuad.pos_y, cuad.size_x, cuad.size_y, al_map_rgb(255, 0, 255));
+
+
+}
