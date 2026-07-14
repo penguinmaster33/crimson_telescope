@@ -42,7 +42,7 @@ void menu(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* s
 void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* segundoTimer, ALLEGRO_TIMER* FPS, ALLEGRO_FONT* fuente);
 void dibujo(ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad);
 void fondo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad);
-
+void movimiento(int mov_x, int mov_y, creature cuad);
 
 
 int main() {
@@ -114,7 +114,7 @@ void menu(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* s
 	ALLEGRO_COLOR gris = al_map_rgb(100, 100, 100);
 
 	ALLEGRO_EVENT evento;
-	
+
 
 
 
@@ -155,6 +155,8 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 	int HRZ = AN_P / 10; //100
 	int VRT = AL_P / 10; //100
 
+	int mov_x=0, mov_y=0;
+
 	int mapa_total[20][20] = {
 	1,	1,	1,	1,	1,	1,  1,  1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,
 	1,	0,	0,	2,	0,	0,	2,	0,	0,	1,	1,	0,	0,	0,	0,	0,	0,	9,	9,	1,
@@ -178,7 +180,7 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,	1,  1,	1,	1,	1,  1,	1,	1,	1,
 	};
 
-	int i=0, j=0;
+	int i = 0, j = 0;
 	//int mapa_total2[20][20];
 	/*for (i = 0; i < 20; i++)
 		for (j = 0; j < 20; j++) {
@@ -189,10 +191,10 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 	creature cuad;
 	cuad.pos_x = 2 * HRZ;
 	cuad.pos_y = 2 * VRT;
-	cuad.size_x=AN_P /10;
-	cuad.size_y=AL_P /10;
+	cuad.size_x = AN_P / 10;
+	cuad.size_y = AL_P / 10;
 	cuad.velocidad = 5;
-	
+
 	int camara = 0, esq = 0;
 
 	while (true)
@@ -212,7 +214,7 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 				printf("| Seg : %d |\n", segundo);
 			}
 		}
-		
+
 
 		if (evento.type == ALLEGRO_EVENT_MOUSE_AXES || evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN && camara == 0) {
 			x = evento.mouse.x;
@@ -275,32 +277,51 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 		else if (camara == 4)
 			fondo(ventana, queue, fuente, mapa_total, esq, cuad);
 
-		
-		if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) {// JUGADOR PRESIONO TECLA. CICLO FOR PARA REVISAR CADA BORDE PARA HACER COLISIONES.
+
+		if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) {	// JUGADOR PRESIONO TECLA. CICLO FOR PARA REVISAR CADA BORDE PARA HACER COLISIONES.
 			for (i = 0;i < 20;i++)
 				for (j = 0;j < 20;j++)
 					if (mapa_total[i][j] < cuad.pos_y) // QUIERO GUARDAR EL CUADRANTE EN EL QUE ESTÁ CADA BORDE DE ESTE INDIVIDUO PARA COMPARARLO CON EL BORDE DE ABAJO MAS FACILMENTE
-						;
-
-
-						
-
-
-						
+						 ;
+		}
+		if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+			if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) {
+				mov_y = 1;
+				movimiento(mov_x, mov_y, cuad);
+				printf("tecla abajo presionada");
+			}
+			if (evento.keyboard.keycode == ALLEGRO_KEY_UP) {
+				mov_y = -1;
+				movimiento(mov_x, mov_y, cuad);
+				printf("tecla arriba presionada");
+			}
+			if (evento.keyboard.keycode == ALLEGRO_KEY_LEFT) {
+				mov_x = -1;
+				movimiento(mov_x, mov_y, cuad);
+				printf("tecla izquierda presionada");
+			}
+			if (evento.keyboard.keycode == ALLEGRO_KEY_RIGHT) {
+				mov_y = 1;
+				movimiento(mov_x, mov_y, cuad);
+				printf("tecla derecha presionada");
+			}
 		}
 
-		if (mapa_total[][])
+
+
+
+		/*if (mapa_total[][])
 			cuad.pos_x = cuad.pos_x - cuad.velocidad;
 
-		if (cuad.pos_y < AL_P / 20) 
+		if (cuad.pos_y < AL_P / 20)
 			cuad.pos_y = cuad.pos_y - cuad.velocidad;
 
-		if (cuad.pos_x + cuad.size_x > AN_P) 
-			cuad.pos_x = AN_P - cuad.size_x ;
+		if (cuad.pos_x + cuad.size_x > AN_P)
+			cuad.pos_x = AN_P - cuad.size_x;
 
-		if (cuad.pos_y + cuad.size_y > AL_P) 
+		if (cuad.pos_y + cuad.size_y > AL_P)
 			cuad.pos_y = AL_P - cuad.size_y;
-
+			*/
 
 
 		if (evento.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
@@ -315,7 +336,7 @@ void ciclo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_TIMER* 
 void fondo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad) {
 	bool running = true;
 	ALLEGRO_EVENT ev;
-	al_wait_for_event(queue, &ev);
+ 	al_wait_for_event(queue, &ev);
 
 	int xplus = 0, yplus = 0;
 	int i, j;
@@ -405,12 +426,7 @@ void fondo(ALLEGRO_DISPLAY* ventana, ALLEGRO_EVENT_QUEUE* queue, ALLEGRO_FONT* f
 		}
 	}
 
-	if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
-		if (ev.keyboard.keycode == ALLEGRO_KEY_DOWN) {
-			cuad.pos_y = cuad.pos_y + cuad.velocidad;
-			printf("tecla abajo presionada");
-		}
-	}
+	
 
 	al_clear_to_color(al_map_rgb(0, 0, 0));
 	dibujo(fuente, mapa_total, esq, cuad);
@@ -478,6 +494,21 @@ void dibujo(ALLEGRO_FONT* fuente, int mapa_total[20][20], int esq, creature cuad
 	}
 
 	al_draw_filled_rectangle(cuad.pos_x, cuad.pos_y, cuad.size_x, cuad.size_y, al_map_rgb(255, 0, 255));
+
+
+}
+
+void movimiento(int mov_x, int mov_y, creature cuad) {
+	if (mov_y == 1) 
+		cuad.pos_y = cuad.pos_y + cuad.velocidad;
+	else if (mov_y == -1) 
+		cuad.pos_y = cuad.pos_y - cuad.velocidad;
+
+	if (mov_x == 1)
+		cuad.pos_x = cuad.pos_x + cuad.velocidad;
+	else if (mov_y == -1)
+		cuad.pos_x = cuad.pos_x - cuad.velocidad;
+
 
 
 }
